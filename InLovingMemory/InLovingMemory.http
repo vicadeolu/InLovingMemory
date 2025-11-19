@@ -1,0 +1,6 @@
+@InLovingMemory_HostAddress = http://localhost:5274
+
+GET {{InLovingMemory_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
