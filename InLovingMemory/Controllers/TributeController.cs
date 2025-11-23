@@ -29,65 +29,36 @@ namespace InLovingMemory.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MemorialTribute tribute)
         {
-            await _service.Create(tribute);
+             await _service.Create(tribute);
             return CreatedAtAction(nameof(GetById), new { id = tribute.Id }, tribute);
+           
         }
 
-        [HttpPost("upload/{tributeId}")]
-        public async Task<IActionResult> UploadImage(string tributeId, [FromBody] ImageUploadRequest request)
+        [HttpPatch("{Id}")]
+        public async Task<IActionResult> UpdateTribute(string Id, [FromBody] MemorialTribute request)
         {
-            if (string.IsNullOrEmpty(request.Base64String) || string.IsNullOrEmpty(request.FileName))
-                return BadRequest("Base64 string and file name are required.");
-
+            
             try
             {
                 // Remove data URI prefix if present (e.g., "data:image/png;base64,")
-                var base64Data = request.Base64String;
-                if (base64Data.Contains(","))
-                {
-                    base64Data = base64Data.Split(',')[1];
-                }
-
-                // Convert Base64 to bytes
-                byte[] fileBytes = Convert.FromBase64String(base64Data);
-
-                // Create uploads folder if it doesn't exist
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                // Generate unique file name
-                var fileExt = Path.GetExtension(request.FileName);
-                var fileName = $"{Guid.NewGuid()}{fileExt}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-
-                // Write file to disk
-                await System.IO.File.WriteAllBytesAsync(filePath, fileBytes);
-
+          
+                
                 // Update MongoDB document
-                var tribute = await _service.GetById(tributeId);
+                var tribute = await _service.GetById(Id);
                 if (tribute == null)
                     return NotFound("Tribute not found.");
 
                 // Initialize Images list if null
-                if (tribute.Images == null)
-                    tribute.Images = new List<ImageInfo>();
-
-                tribute.Images.Add(new ImageInfo
-                {
-                    ImageName = request.FileName,
-                    FileExt = fileExt,
-                    FilePath = $"/uploads/{fileName}",
-                });
-
+               tribute.Tribute = request.Tribute;
+                tribute.FullName = request.FullName;
+                
                 tribute.DateModified = DateTime.UtcNow;
                 await _service.Update(tribute);
 
                 return Ok(new
                 {
-                    message = "Image uploaded successfully",
-                    path = $"/uploads/{fileName}",
-                    fileName = fileName
+                    message = "Tribute updated successfully",
+                    data = tribute
                 });
             }
             catch (FormatException)
@@ -98,7 +69,12 @@ namespace InLovingMemory.Controllers
             {
                 return StatusCode(500, $"Error uploading image: {ex.Message}");
             }
+       
         }
+
+
+
+
 
         // Request model
         public class ImageUploadRequest

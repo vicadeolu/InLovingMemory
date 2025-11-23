@@ -21,9 +21,9 @@ namespace InLovingMemory.Data.Entity
             public List<ImageInfo>? Images { get; set; }
 
             [BsonElement("dateModified")]
-            public DateTime DateModified { get; set; }
+            public DateTime DateModified { get; set; } = DateTime.UtcNow;
 
             [BsonElement("dateCreated")]
-            public DateTime DateCreated { get; set; }
+            public DateTime DateCreated { get; set; } = DateTime.UtcNow;
         }
     }
